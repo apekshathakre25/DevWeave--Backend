@@ -42,7 +42,8 @@ const userSchema = new mongoose.Schema(
     },
     profilePicture: {
       type: String,
-      default: "https://static.vecteezy.com/system/resources/previews/045/711/163/non_2x/default-avatar-female-profile-icon-grey-photo-placeholder-gray-profile-anonymous-face-picture-illustration-for-social-media-dating-profile-forum-vector.jpg",
+      default:
+        "https://static.vecteezy.com/system/resources/previews/045/711/163/non_2x/default-avatar-female-profile-icon-grey-photo-placeholder-gray-profile-anonymous-face-picture-illustration-for-social-media-dating-profile-forum-vector.jpg",
       // validate(value) {
       //   if (!validator.isURL(value)) {
       //     throw new Error("Invalid URL for profile picture");
@@ -52,6 +53,10 @@ const userSchema = new mongoose.Schema(
     gender: {
       type: String,
       enum: ["male", "female", "other"],
+    },
+    age: {
+      type: Number,
+      default: 0,
     },
     about: {
       type: String,

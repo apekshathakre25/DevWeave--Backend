@@ -67,7 +67,34 @@ const login = async (req, res) => {
   }
 };
 
+const forgotPass = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid Email" });
+    }
+
+    const hashpassword = await bcrypt.hash(password, 10);
+    user.password = hashpassword;
+
+    await user.save();
+    return res.status(201).json({ message: "Password Changed succesfully" });
+    
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   signup,
   login,
+  forgotPass,
 };

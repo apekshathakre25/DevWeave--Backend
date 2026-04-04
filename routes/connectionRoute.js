@@ -1,6 +1,8 @@
 const {
   sendConnectionRequest,
   reviewConnectionRequest,
+  getAllConnection,
+  getPendingConnection,
 } = require("../controller/connectionController");
 const { authMiddleware } = require("../middleware/authMiddleware");
 const express = require("express");
@@ -18,5 +20,9 @@ router.post(
   authMiddleware,
   reviewConnectionRequest,
 );
+
+router.get("/pending/connections", authMiddleware, getPendingConnection);
+
+router.get("/accepted/connections", authMiddleware, getAllConnection);
 
 module.exports = router;

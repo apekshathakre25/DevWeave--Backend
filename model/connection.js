@@ -26,6 +26,8 @@ const connectionSchema = new mongoose.Schema(
   },
 );
 
+connectionSchema.index({ fromUserId: 1, toUserId: 1 }, { unique: true });
+
 const ConnectionModel = mongoose.model("Connection", connectionSchema);
 
 module.exports = ConnectionModel;

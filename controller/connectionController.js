@@ -11,6 +11,11 @@ const requiredFields = [
   "about",
 ];
 
+const page = parseInt(req.query.page) || 1;
+const limit = parseInt(req.query.limit) || 10;
+
+const skip = (page - 1) * limit;
+
 const sendConnectionRequest = async (req, res) => {
   try {
     const fromUserId = req.user._id;
@@ -156,9 +161,13 @@ const getFeed = async (req, res) => {
       },
     }).select(requiredFields);
 
-    return res.status(200).json({
-      data: showFeed,
-    });
+    return res
+      .status(200)
+      .json({
+        data: showFeed,
+      })
+      .skip(skip)
+      .limit(limit);
   } catch (error) {
     return res.status(500).json({
       message: "Something went wrong",
@@ -171,6 +180,6 @@ module.exports = {
   sendConnectionRequest,
   reviewConnectionRequest,
   getAllConnection,
-  getPendingConnection, 
-  getFeed
+  getPendingConnection,
+  getFeed,
 };

@@ -133,9 +133,44 @@ const getPendingConnection = async (req, res) => {
   }
 };
 
+const getFeed = async (req, res) => {
+  try {
+    const user = req.user;
+
+    const connectionExist = await Connection.find({
+      $or: [{ fromUserId: user._id }, { toUserId: user._id }],
+    });
+
+    const hideUserFromFeed = new Set();
+
+    connectionExist.forEach((conn) => {
+      hideUserFromFeed.add(conn.fromUserId.toString());
+      hideUserFromFeed.add(conn.toUserId.toString());
+    });
+
+    hideUserFromFeed.add(user._id.toString());
+
+    const showFeed = await User.find({
+      _id: {
+        $nin: Array.from(hideUserFromFeed),
+      },
+    }).select(requiredFields);
+
+    return res.status(200).json({
+      data: showFeed,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Something went wrong",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   sendConnectionRequest,
   reviewConnectionRequest,
   getAllConnection,
-  getPendingConnection,
+  getPendingConnection, 
+  getFeed
 };

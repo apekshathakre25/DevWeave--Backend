@@ -3,11 +3,14 @@ const {
   reviewConnectionRequest,
   getAllConnection,
   getPendingConnection,
+  getFeed,
 } = require("../controller/connectionController");
 const { authMiddleware } = require("../middleware/authMiddleware");
 const express = require("express");
 
 const router = express.Router();
+
+router.get("/feed", authMiddleware, getFeed);
 
 router.post(
   "/request/send/:status/:toUserId",

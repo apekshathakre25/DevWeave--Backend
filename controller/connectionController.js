@@ -2,19 +2,14 @@ const Connection = require("../model/connection");
 const User = require("../model/user");
 
 const requiredFields = [
-  "firstName",
-  "lastName",
+  "firstname",
+  "lastname",
   "profilePicture",
   "age",
   "skills",
   "gender",
   "about",
 ];
-
-const page = parseInt(req.query.page) || 1;
-const limit = parseInt(req.query.limit) || 10;
-
-const skip = (page - 1) * limit;
 
 const sendConnectionRequest = async (req, res) => {
   try {
@@ -141,6 +136,9 @@ const getPendingConnection = async (req, res) => {
 const getFeed = async (req, res) => {
   try {
     const user = req.user;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
     const connectionExist = await Connection.find({
       $or: [{ fromUserId: user._id }, { toUserId: user._id }],
@@ -159,15 +157,14 @@ const getFeed = async (req, res) => {
       _id: {
         $nin: Array.from(hideUserFromFeed),
       },
-    }).select(requiredFields);
-
-    return res
-      .status(200)
-      .json({
-        data: showFeed,
-      })
+    })
+      .select(requiredFields)
       .skip(skip)
       .limit(limit);
+
+    return res.status(200).json({
+      data: showFeed,
+    });
   } catch (error) {
     return res.status(500).json({
       message: "Something went wrong",

@@ -4,7 +4,7 @@ const User = require("../model/user");
 const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res
         .status(401)
@@ -13,7 +13,10 @@ const authMiddleware = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-     const verifyToken = jwt.verify(token, process.env.SECRET_KEY);
+    const verifyToken = jwt.verify(
+      token,
+      process.env.SECRET_KEY || "$!KKLFC%5",
+    );
 
     if (!verifyToken) {
       return res.status(401).json({ message: "Invalid token" });

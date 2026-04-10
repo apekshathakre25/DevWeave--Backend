@@ -52,7 +52,7 @@ const login = async (req, res) => {
 
     const token = jwt.sign(
       { _id: user._id, email: user.email },
-      process.env.SECRET_KEY,
+      process.env.SECRET_KEY || "$!KKLFC%5",
       { expiresIn: "7d" },
     );
 
@@ -86,7 +86,6 @@ const forgotPass = async (req, res) => {
 
     await user.save();
     return res.status(201).json({ message: "Password Changed succesfully" });
-    
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: error.message });

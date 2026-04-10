@@ -5,16 +5,11 @@ const { connectToDB } = require("../connectToDB/connectToDb");
 const authRoute = require("../routes/authRoute");
 const userRoute = require("../routes/userRoute");
 const connectionRoute = require("../routes/connectionRoute");
-const cors = require("cors");
+const cors = require("cors")
 
 dotenv.config();
 
-app.use(
-  cors({
-    origin: ["http://3.27.94.237/api", "http://localhost:3000"],
-  }),
-);
-
+app.use(cors());
 app.use(express.json());
 
 connectToDB();

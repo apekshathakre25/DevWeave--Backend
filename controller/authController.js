@@ -9,19 +9,15 @@ const PASSWORD_RESET_TOKEN_BYTES = 32;
 const PASSWORD_RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000;
 
 const createToken = (user) =>
-  jwt.sign(
-    { _id: user._id, email: user.email },
-    process.env.SECRET_KEY || "$!KKLFC%5",
-    { expiresIn: "7d" },
-  );
+  jwt.sign({ _id: user._id, email: user.email }, process.env.SECRET_KEY, {
+    expiresIn: "7d",
+  });
 
 const sanitizeUser = (user) => {
   const safeUser = user.toObject ? user.toObject() : { ...user };
   delete safeUser.password;
   return safeUser;
 };
-
-
 
 const createPasswordResetToken = () => {
   const token = crypto.randomBytes(PASSWORD_RESET_TOKEN_BYTES).toString("hex");
@@ -36,7 +32,6 @@ const createPasswordResetToken = () => {
 
 const getClientUrl = (req) => {
   const clientUrl = process.env.FRONTEND_URL;
-
   return clientUrl.replace(/\/+$/, "");
 };
 

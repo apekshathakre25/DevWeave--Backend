@@ -15,7 +15,7 @@ app.use(express.json());
 
 connectToDB();
 
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT 
 
 app.use("/", authRoute);
 app.use("/", userRoute);

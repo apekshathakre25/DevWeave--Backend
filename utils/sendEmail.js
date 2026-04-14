@@ -34,10 +34,7 @@ const createSendEmailCommand = ({ to, from, subject, text, html }) => {
 };
 
 const sendEmail = async ({ to, subject, text, html }) => {
-  const from =
-    process.env.SES_FROM_EMAIL ||
-    process.env.AWS_SES_FROM_EMAIL ||
-    process.env.FROM_EMAIL;
+  const from = process.env.SES_FROM_EMAIL 
 
   if (!from) {
     throw new Error("SES sender email is not configured. Set SES_FROM_EMAIL.");

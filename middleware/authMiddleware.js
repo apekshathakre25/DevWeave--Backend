@@ -19,7 +19,7 @@ const authMiddleware = async (req, res, next) => {
 
     const verifyToken = jwt.verify(
       token,
-      process.env.SECRET_KEY || "$!KKLFC%5",
+      process.env.SECRET_KEY,
     );
 
     if (!verifyToken) {

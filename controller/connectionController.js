@@ -13,19 +13,6 @@ const requiredFields = [
   "about",
 ];
 
-const escapeHtml = (value) =>
-  String(value).replace(
-    /[&<>"']/g,
-    (character) =>
-      ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;",
-      })[character],
-  );
-
 const sendConnectionRequest = async (req, res) => {
   try {
     const fromUserId = req.user._id;
@@ -80,17 +67,17 @@ const sendConnectionRequest = async (req, res) => {
         `${req.user.firstname} ${req.user.lastname || ""}`.trim();
       const receiverName =
         `${receiver.firstname} ${receiver.lastname || ""}`.trim() || "there";
-      const escapedSenderName = escapeHtml(senderName);
-      const escapedReceiverName = escapeHtml(receiverName);
+      const escapedSenderName = senderName;
+      const escapedReceiverName = receiverName;
 
       try {
         await sendEmail({
           to: receiver.email,
-          subject: "New connection request on DevTinder",
-          text: `Hi ${receiverName}, ${senderName} sent you a connection request on DevTinder.`,
+          subject: "New connection request on DevWeave",
+          text: `Hi ${receiverName}, ${senderName} sent you a connection request on DevWeave.`,
           html: `
             <p>Hi ${escapedReceiverName},</p>
-            <p>${escapedSenderName} sent you a connection request on DevTinder.</p>
+            <p>${escapedSenderName} sent you a connection request on DevWeave.</p>
           `,
         });
         emailSent = true;

@@ -1,9 +1,11 @@
+const bcrypt = require("bcrypt");
+
 const profile = async (req, res) => {
   try {
     const user = req.user;
 
     res.status(200).json({
-      message: "User profile fetched succesfully",
+      message: "User profile fetched successfully",
       user,
     });
   } catch (error) {
@@ -37,8 +39,33 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    Object.keys(req.body).forEach((key) => {
-      user[key] = req.body[key];
+    const updates = { ...req.body };
+
+    if (updates.skills !== undefined) {
+      if (Array.isArray(updates.skills)) {
+        updates.skills = updates.skills
+          .map((skill) => String(skill).trim())
+          .filter(Boolean);
+      } else if (typeof updates.skills === "string") {
+        updates.skills = updates.skills
+          .split(",")
+          .map((skill) => skill.trim())
+          .filter(Boolean);
+      } else {
+        return res.status(400).json({ message: "Skills must be an array" });
+      }
+    }
+
+    if (updates.age !== undefined) {
+      updates.age = Number(updates.age);
+
+      if (!Number.isFinite(updates.age) || updates.age < 0) {
+        return res.status(400).json({ message: "Age must be a valid number" });
+      }
+    }
+
+    Object.keys(updates).forEach((key) => {
+      user[key] = updates[key];
     });
 
     await user.save();

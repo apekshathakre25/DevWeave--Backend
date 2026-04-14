@@ -2,12 +2,31 @@ const User = require("../model/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+const createToken = (user) =>
+  jwt.sign(
+    { _id: user._id, email: user.email },
+    process.env.SECRET_KEY || "$!KKLFC%5",
+    { expiresIn: "7d" },
+  );
+
+const sanitizeUser = (user) => {
+  const safeUser = user.toObject ? user.toObject() : { ...user };
+  delete safeUser.password;
+  return safeUser;
+};
+
 const signup = async (req, res) => {
   try {
     const { firstname, lastname, email, password } = req.body;
 
     if (!firstname || !lastname || !email || !password) {
-      throw new Error("All fields are required");
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(409).json({ message: "Email is already registered" });
     }
 
     const hashpassword = await bcrypt.hash(password, 10);
@@ -15,19 +34,21 @@ const signup = async (req, res) => {
     const user = new User({
       firstname,
       lastname,
-      email,
+      email: normalizedEmail,
       password: hashpassword,
     });
 
     await user.save();
+    const token = createToken(user);
 
     res.status(201).json({
       message: "User created successfully",
-      user,
+      user: sanitizeUser(user),
+      token,
     });
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -36,29 +57,25 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      throw new Error("All fields are required");
+      return res.status(400).json({ message: "All fields are required" });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
-      throw new Error("Invalid credentials");
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const comparePass = await bcrypt.compare(password, user.password);
 
     if (!comparePass) {
-      throw new Error("Invalid credentials");
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign(
-      { _id: user._id, email: user.email },
-      process.env.SECRET_KEY || "$!KKLFC%5",
-      { expiresIn: "7d" },
-    );
+    const token = createToken(user);
 
     res.status(200).json({
       message: "User logged in successfully",
-      user,
+      user: sanitizeUser(user),
       token,
     });
   } catch (error) {
@@ -76,7 +93,7 @@ const forgotPass = async (req, res) => {
         .status(400)
         .json({ message: "Email and password are required" });
     }
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
       return res.status(400).json({ message: "Invalid Email" });
     }
@@ -85,7 +102,7 @@ const forgotPass = async (req, res) => {
     user.password = hashpassword;
 
     await user.save();
-    return res.status(201).json({ message: "Password Changed succesfully" });
+    return res.status(200).json({ message: "Password changed successfully" });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: error.message });

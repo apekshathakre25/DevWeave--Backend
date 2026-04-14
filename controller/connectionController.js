@@ -1,5 +1,7 @@
 const Connection = require("../model/connection");
 const User = require("../model/user");
+const { sendEmail } = require("../utils/sendEmail");
+const mongoose = require("mongoose");
 
 const requiredFields = [
   "firstname",
@@ -11,18 +13,44 @@ const requiredFields = [
   "about",
 ];
 
+const escapeHtml = (value) =>
+  String(value).replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character],
+  );
+
 const sendConnectionRequest = async (req, res) => {
   try {
     const fromUserId = req.user._id;
-    const toUserId = req.params.toUserId;
+    const { status, toUserId } = req.params;
+
+    const allowedStatus = ["interested", "ignored"];
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({
+        message: "Invalid status. Only 'interested' or 'ignored' allowed",
+      });
+    }
+
+    if (!mongoose.isValidObjectId(toUserId)) {
+      return res.status(400).json({ message: "Invalid receiver id" });
+    }
 
     const receiver = await User.findById(toUserId);
     if (!receiver) {
-      throw new Error("Receiver does not exist");
+      return res.status(404).json({ message: "Receiver does not exist" });
     }
 
     if (fromUserId.equals(toUserId)) {
-      throw new Error("You cannot send a request to yourself");
+      return res
+        .status(400)
+        .json({ message: "You cannot send a request to yourself" });
     }
 
     const existingConnection = await Connection.findOne({
@@ -33,23 +61,54 @@ const sendConnectionRequest = async (req, res) => {
     });
 
     if (existingConnection) {
-      throw new Error("Connection request already exists");
+      return res
+        .status(409)
+        .json({ message: "Connection request already exists" });
     }
 
     const connection = new Connection({
       fromUserId,
       toUserId,
-      status: "interested",
+      status,
     });
 
     await connection.save();
 
+    let emailSent = false;
+    if (status === "interested") {
+      const senderName =
+        `${req.user.firstname} ${req.user.lastname || ""}`.trim();
+      const receiverName =
+        `${receiver.firstname} ${receiver.lastname || ""}`.trim() || "there";
+      const escapedSenderName = escapeHtml(senderName);
+      const escapedReceiverName = escapeHtml(receiverName);
+
+      try {
+        await sendEmail({
+          to: receiver.email,
+          subject: "New connection request on DevTinder",
+          text: `Hi ${receiverName}, ${senderName} sent you a connection request on DevTinder.`,
+          html: `
+            <p>Hi ${escapedReceiverName},</p>
+            <p>${escapedSenderName} sent you a connection request on DevTinder.</p>
+          `,
+        });
+        emailSent = true;
+      } catch (emailError) {
+        console.error(
+          "Failed to send connection request email:",
+          emailError.message,
+        );
+      }
+    }
+
     return res.status(201).json({
-      message: `Connection request marked as interested successfully`,
+      message: `Connection request marked as ${status} successfully`,
+      emailSent,
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };
 
@@ -63,6 +122,10 @@ const reviewConnectionRequest = async (req, res) => {
       return res.status(400).json({
         message: "Invalid status. Only 'accepted' or 'rejected' allowed",
       });
+    }
+
+    if (!mongoose.isValidObjectId(requestId)) {
+      return res.status(400).json({ message: "Invalid request id" });
     }
 
     const connectionRequest = await Connection.findOne({

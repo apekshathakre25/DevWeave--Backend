@@ -13,6 +13,10 @@ const authMiddleware = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
+    if (!token || token === "undefined" || token === "null") {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
     const verifyToken = jwt.verify(
       token,
       process.env.SECRET_KEY || "$!KKLFC%5",
